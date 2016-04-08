@@ -7,10 +7,10 @@ import argparse
 from six.moves.urllib.parse import urlparse
 from bs4 import BeautifulSoup
 
-from .version import version
-from .spider.handler import HandlerBase
-from .searchengine import getEngine
+from ..spider import HandlerBase
+from ..searchengine import getEngine
 
+version = '0.1.0'
 logger = logging.getLogger(__name__)
 
 
@@ -21,7 +21,7 @@ class SearchDomain(HandlerBase):
         self.domain = domain
         self.subdomains = []
         for page in range(max_pages):
-            self.engine.set_search(search='site:%s' % domain, page=page)
+            self.engine.set_search(search='site:%s -inurl:www' % domain, page=page)
             self.put(self.engine.get_url(), self.engine.get_data())
 
     def find_urls(self, soup):

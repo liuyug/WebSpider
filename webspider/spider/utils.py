@@ -86,7 +86,8 @@ def url_downloader(url, data=None, path=None,
             response and response.close()
             retry -= 1
             if retry > 0:
-                logger.warn('Wait %d seconds to retry... (%d): %s' % (retry_ivl, retry, err))
+                logger.info('Wait %d seconds to retry... (%d): %s - %s' % (
+                    retry_ivl, retry, err, url))
                 time.sleep(retry_ivl)
                 retry_ivl += retry_ivl
                 timeout += timeout
