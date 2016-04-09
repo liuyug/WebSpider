@@ -57,6 +57,10 @@ def url_downloader(url, data=None, path=None,
         try:
             request = Request(url, data=data)
             request.add_header('User-Agent', agent)
+            if data:
+                request.add_header(
+                    'Content-Type',
+                    'application/x-www-form-urlencoded;charset=utf-8')
             response = None
             if proxy:
                 scheme, host, port = proxy.split(':')
@@ -86,13 +90,13 @@ def url_downloader(url, data=None, path=None,
             response and response.close()
             retry -= 1
             if retry > 0:
-                logger.info('Wait %d seconds to retry... (%d): %s - %s' % (
+                logger.debug('Wait %d seconds to retry... (%d): %s - %s' % (
                     retry_ivl, retry, err, url))
                 time.sleep(retry_ivl)
                 retry_ivl += retry_ivl
                 timeout += timeout
             else:
-                logger.error('%s - %s' % (err, url))
+                logger.info('%s - %s' % (err, url))
                 mime = r_data = real_url = None
                 break
     return {'mime': mime, 'path': path, 'data': r_data, 'url': real_url, 'error': err}

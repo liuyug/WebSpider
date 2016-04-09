@@ -8,3 +8,8 @@ class SeedQueue(Queue):
 class DoneQueue(list):
     def put(self, item):
         self.append(item)
+
+
+class DeadQueue(list):
+    def put(self, item):
+        self.append(item)
