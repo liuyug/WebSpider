@@ -84,19 +84,20 @@ def url_downloader(url, data=None, path=None,
             response.close()
             mime = response.info().get('content-type')
             real_url = response.geturl()
-            err = 'Ok'
+            err_msg = 'Ok'
             break
-        except (URLError, socket.error) as err:
+        except (URLError, socket.error, Exception) as err:
             response and response.close()
             retry -= 1
+            err_msg = str(err)
             if retry > 0:
-                logger.debug('Wait %d seconds to retry... (%d): %s - %s' % (
+                logger.error('Wait %d seconds to retry... (%d): %s - %s' % (
                     retry_ivl, retry, err, url))
                 time.sleep(retry_ivl)
                 retry_ivl += retry_ivl
                 timeout += timeout
             else:
-                logger.info('%s - %s' % (err, url))
+                logger.error('%s - %s' % (err, url))
                 mime = r_data = real_url = None
                 break
-    return {'mime': mime, 'path': path, 'data': r_data, 'url': real_url, 'error': err}
+    return {'mime': mime, 'path': path, 'data': r_data, 'url': real_url, 'error': err_msg}
