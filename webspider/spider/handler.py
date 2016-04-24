@@ -19,12 +19,12 @@ class HandlerBase(object):
     dead_queue
         dead url, don't get url content
     """
-    def __init__(self, agent=None, proxy=None, max_errors=None):
+    def __init__(self, agent=None, proxy=None, retries=None):
         self.seed_queue = SeedQueue()
         self.done_queue = DoneQueue()
         self.dead_queue = DeadQueue()
         self.is_shutdown = False
-        self.max_errors = max_errors or 5
+        self.retries = retries or 3
         self.agent = agent or 'Mozilla/5.0 (X11; Linux x86_64; rv:17.0) Gecko/20130619 Firefox/17.0'
         self.proxy = proxy
 
@@ -39,11 +39,12 @@ class HandlerBase(object):
             return
         logger.debug('get url: %s, data: %s' % (url, data))
         ret = url_downloader(url, data=data,
+                             retry=2,
                              agent=self.agent, proxy=self.proxy)
         if ret['error'] == 'Ok':
             self.handle(ret['data'])
             self.done_queue.put(get_url)
-        elif item['count'] > self.max_errors:
+        elif item['count'] > self.retries:
             logger.error('Failed to get %s: %s' % (url, ret['error']))
             self.dead_queue.put(get_url)
         else:
@@ -55,7 +56,7 @@ class HandlerBase(object):
             }
             self.seed_queue.put(new_item)
 
-    def put(self, url, data):
+    def put(self, url, data=None):
         item = {
             'url': url,
             'data': data,
