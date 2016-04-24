@@ -1,9 +1,9 @@
-
+import sys
 import time
 import re
 import gzip
-import logging
 import socket
+import random
 
 from six.moves.urllib.error import URLError
 from six.moves.urllib.request import Request, urlopen, build_opener
@@ -11,7 +11,19 @@ from six.moves.urllib.request import Request, urlopen, build_opener
 import socks
 from sockshandler import SocksiPyHandler
 
-logger = logging.getLogger(__name__)
+
+def perror(text):
+    sys.stderr.write(text + '\n')
+
+
+def get_user_agent(idx=-1):
+    user_agent = [
+        'Mozilla/5.0 (X11; Linux x86_64; rv:17.0) Gecko/20130619 Firefox/17.0',
+        'Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/49.0.2623.112 Safari/537.36',
+    ]
+    if idx < 0:
+        idx = random.randint(0, len(user_agent) - 1)
+    return user_agent[idx]
 
 
 def html_chardet(text):
@@ -40,7 +52,7 @@ def html_chardet(text):
 
 
 def url_downloader(url, data=None, path=None,
-                   timeout=10, retry=3, retry_ivl=5, agent=None, proxy=None):
+                   timeout=5, retry=3, retry_ivl=5, agent=None, proxy=None):
     """Download URL link
     url:    url to download
     data:   post data
@@ -52,7 +64,7 @@ def url_downloader(url, data=None, path=None,
     proxy:  socks5://127.0.0.1:1080
     """
     if not agent:
-        agent = 'Mozilla/5.0 (X11; Linux x86_64; rv:17.0) Gecko/20130619 Firefox/17.0'
+        agent = get_user_agent()
     while True:
         try:
             request = Request(url, data=data)
@@ -73,7 +85,6 @@ def url_downloader(url, data=None, path=None,
                 response = urlopen(request, timeout=timeout)
             content_encoding = response.info().get('content-encoding')
             if content_encoding:
-                logger.info('Find content-encoding: %s', content_encoding)
                 r_data = gzip.decompress(response.read())
             else:
                 r_data = response.read()
@@ -91,13 +102,13 @@ def url_downloader(url, data=None, path=None,
             retry -= 1
             err_msg = str(err)
             if retry > 0:
-                logger.error('Wait %d seconds to retry... (%d): %s - %s' % (
+                perror('Wait %d seconds to retry... (%d): %s - %s' % (
                     retry_ivl, retry, err, url))
                 time.sleep(retry_ivl)
                 retry_ivl += retry_ivl
                 timeout += timeout
             else:
-                logger.error('%s - %s' % (err, url))
+                perror('%s - %s' % (err, url))
                 mime = r_data = real_url = None
                 break
     return {'mime': mime, 'path': path, 'data': r_data, 'url': real_url, 'error': err_msg}
