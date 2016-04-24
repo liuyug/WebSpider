@@ -1,0 +1,73 @@
+#!/usr/bin/env python
+# -*- encoding:utf-8 -*-
+# additional packages:
+#   pysocks
+#   six
+#   lxml
+#   BeautifulSoup4
+
+import argparse
+
+from webspider.searchengine import getEngine
+
+
+version = '0.1.0'
+
+
+def handleData(data):
+    global only_url
+    if only_url:
+        print('%(url)s' % data)
+    else:
+        print('# %(index)s.\t%(title)s\n%(url)s' % data)
+
+
+def main():
+    epilog = "%(prog)s --engine baidu sina.com.cn"
+    parser = argparse.ArgumentParser(epilog=epilog)
+    parser.add_argument('--version', action='version',
+                        version='%%(prog)s %s' % version)
+    parser.add_argument('-v', '--verbose', help='verbose help',
+                        action='count', default=0)
+    parser.add_argument('--only-url', action='store_true', help='only output url')
+
+    search_group = parser.add_argument_group('Find urls from searching engine')
+    search_group.add_argument(
+        '--engine',
+        choices=('baidu', 'bing', 'google'),
+        required=True,
+        help='search engine',
+    )
+    search_group.add_argument('--user-agent', help='http user agent')
+    search_group.add_argument('--page-num', type=int, default=10, help='searching page number')
+    search_group.add_argument('--proxy', help='proxy server, socks5://127.0.0.1:1080')
+
+    parser.add_argument('content', nargs='+', help='searching content')
+    args = parser.parse_args()
+
+    # find urls from searching engine
+    if args.engine:
+        print('=' * 80)
+        engine = getEngine(args.engine, agent=args.user_agent, proxy=args.proxy)
+        data = {}
+        for content in args.content:
+            if ':' in content:
+                k, v = content.split(':')
+                data[k] = v
+            else:
+                if 'text' not in data:
+                    data['text'] = []
+                data['text'].append(content)
+        engine.addSearch(**data)
+        # engine.addSearch(inurl='.php?id=')
+
+        engine.addSearch(page_max=args.page_num)
+        engine.registerCallback(handleData=handleData)
+        global only_url
+        only_url = args.only_url
+
+        engine.run_once()
+
+
+if __name__ == '__main__':
+    main()
