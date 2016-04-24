@@ -6,12 +6,14 @@
 #   lxml
 #   BeautifulSoup4
 
+import sys
 import argparse
 
 from webspider.searchengine import getEngine
 
 
 version = '0.1.0'
+encoding = sys.stdout.encoding or 'UTF-8'
 
 
 def handleSoup(soup, url):
@@ -23,7 +25,8 @@ def handleData(data):
     if only_url:
         print('%(url)s' % data)
     else:
-        print('# %(index)s.\t%(title)s\n%(url)s' % data)
+        text = '# %(index)s.\t%(title)s\n%(url)s' % data
+        print(text.encode(encoding))
 
 
 def main():
