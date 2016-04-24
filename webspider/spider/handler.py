@@ -28,7 +28,7 @@ class HandlerBase(object):
         self.agent = agent or 'Mozilla/5.0 (X11; Linux x86_64; rv:17.0) Gecko/20130619 Firefox/17.0'
         self.proxy = proxy
 
-    def handle(self, data):
+    def handle(self, data, url):
         pass
 
     def __handle(self, item):
@@ -42,7 +42,7 @@ class HandlerBase(object):
                              retry=2,
                              agent=self.agent, proxy=self.proxy)
         if ret['error'] == 'Ok':
-            self.handle(ret['data'])
+            self.handle(ret['data'], url)
             self.done_queue.put(get_url)
         elif item['count'] > self.retries:
             logger.error('Failed to get %s: %s' % (url, ret['error']))

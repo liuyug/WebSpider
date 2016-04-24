@@ -10,9 +10,9 @@ class EngineSpider(spider.HandlerBase):
         super(EngineSpider, self).__init__(**kwargs)
         self.searching = searching
 
-    def handle(self, data):
+    def handle(self, data, url):
         soup = BeautifulSoup(data, 'lxml')
-        self.searching.handle(soup)
+        self.searching.handle(soup, url)
 
 
 class EngineBase(object):
@@ -26,6 +26,7 @@ class EngineBase(object):
     callbacks = {
         'handleTag': None,
         'handleData': None,
+        'handleSoup': None,
     }
     matchs = None
     count = 0
@@ -94,13 +95,20 @@ class EngineBase(object):
     def _findMatchUrls(self, tag):
         return ''
 
-    def registerCallback(self, handleData=None, handleTag=None):
+    def registerCallback(self,
+                         handleData=None,
+                         handleTag=None,
+                         handleSoup=None):
         if handleData:
             self.callbacks['handleData'] = handleData
         if handleTag:
             self.callbacks['handleTag'] = handleTag
+        if handleSoup:
+            self.callbacks['handleSoup'] = handleSoup
 
-    def handle(self, soup):
+    def handle(self, soup, url):
+        if self.callbacks['handleSoup']:
+            self.callbacks['handleSoup'](soup, url)
         for tag in self._findMatchTags(soup):
             if self.callbacks['handleTag']:
                 self.callbacks['handleTag'](tag)

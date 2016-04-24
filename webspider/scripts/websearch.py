@@ -14,6 +14,10 @@ from webspider.searchengine import getEngine
 version = '0.1.0'
 
 
+def handleSoup(soup, url):
+    print('# request: %s' % url)
+
+
 def handleData(data):
     global only_url
     if only_url:
@@ -59,10 +63,9 @@ def main():
                     data['text'] = []
                 data['text'].append(content)
         engine.addSearch(**data)
-        # engine.addSearch(inurl='.php?id=')
 
         engine.addSearch(page_max=args.page_num)
-        engine.registerCallback(handleData=handleData)
+        engine.registerCallback(handleData=handleData, handleSoup=handleSoup)
         global only_url
         only_url = args.only_url
 
