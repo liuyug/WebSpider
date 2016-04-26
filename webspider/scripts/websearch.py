@@ -12,7 +12,7 @@ import argparse
 from webspider.searchengine import getEngine
 
 
-version = '0.1.0'
+version = '0.1.2'
 encoding = sys.stdout.encoding or 'UTF-8'
 
 
@@ -30,8 +30,14 @@ def handleData(data):
 
 
 def main():
-    epilog = "%(prog)s --engine baidu sina.com.cn"
-    parser = argparse.ArgumentParser(epilog=epilog)
+    epilog = """Example:
+    %(prog)s --engine baidu <search text>
+    %(prog)s --engine baidu site:baidu.com filetype:pdf
+"""
+    parser = argparse.ArgumentParser(
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog=epilog,
+    )
     parser.add_argument('--version', action='version',
                         version='%%(prog)s %s' % version)
     parser.add_argument('-v', '--verbose', help='verbose help',
