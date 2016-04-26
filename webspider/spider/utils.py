@@ -6,7 +6,8 @@ import socket
 import random
 
 from six.moves.urllib.error import URLError
-from six.moves.urllib.request import Request, urlopen, build_opener
+from six.moves.urllib.request import Request, build_opener, HTTPCookieProcessor
+from six.moves.http_cookiejar import CookieJar
 
 import socks
 from sockshandler import SocksiPyHandler
@@ -51,8 +52,8 @@ def html_chardet(text):
     return None
 
 
-def url_downloader(url, data=None, path=None,
-                   timeout=5, retry=3, retry_ivl=5, agent=None, proxy=None):
+def url_downloader(url, data=None, path=None, cookie=None,
+                   timeout=5, retry=1, retry_ivl=5, agent=None, proxy=None):
     """Download URL link
     url:    url to download
     data:   post data
@@ -63,26 +64,27 @@ def url_downloader(url, data=None, path=None,
     agent:  http user agent
     proxy:  socks5://127.0.0.1:1080
     """
-    if not agent:
-        agent = get_user_agent()
     while True:
         try:
             request = Request(url, data=data)
-            request.add_header('User-Agent', agent)
+            request.add_header('User-Agent', agent or get_user_agent())
             if data:
                 request.add_header(
                     'Content-Type',
                     'application/x-www-form-urlencoded;charset=utf-8')
             response = None
+            if cookie is None:
+                cookie = CookieJar()
+            cookie_handler = HTTPCookieProcessor(cookie)
+            opener = build_opener(cookie_handler)
             if proxy:
                 scheme, host, port = proxy.split(':')
                 host = host.strip('/')
-                opener = build_opener(SocksiPyHandler(
+                proxy_handler = SocksiPyHandler(
                     socks.PROXY_TYPES[scheme.upper()], host, int(port)
-                ))
-                response = opener.open(request, timeout=timeout)
-            else:
-                response = urlopen(request, timeout=timeout)
+                )
+                opener.add_handler(proxy_handler)
+            response = opener.open(request, timeout=timeout)
             content_encoding = response.info().get('content-encoding')
             if content_encoding:
                 r_data = gzip.decompress(response.read())
@@ -102,13 +104,17 @@ def url_downloader(url, data=None, path=None,
             retry -= 1
             err_msg = str(err)
             if retry > 0:
-                perror('Wait %d seconds to retry... (%d): %s - %s' % (
-                    retry_ivl, retry, err, url))
                 time.sleep(retry_ivl)
                 retry_ivl += retry_ivl
                 timeout += timeout
             else:
-                perror('%s - %s' % (err, url))
                 mime = r_data = real_url = None
                 break
-    return {'mime': mime, 'path': path, 'data': r_data, 'url': real_url, 'error': err_msg}
+    return {
+        'mime': mime,
+        'path': path,
+        'data': r_data,
+        'url': real_url,
+        'cookie': cookie,
+        'error': err_msg,
+    }

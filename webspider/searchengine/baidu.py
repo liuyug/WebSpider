@@ -9,10 +9,10 @@ from .base import EngineBase
 
 class BaiduEngine(EngineBase):
     def __init__(self, **kwargs):
-        super(BaiduEngine, self).__init__(**kwargs)
         self.name = 'baidu'
-        self.url = 'http://www.baidu.com/s'
-        self.page_key = 'pn'
+        self.firstPage = 'https://www.baidu.com/'
+        super(BaiduEngine, self).__init__(**kwargs)
+        self.url = 'https://www.baidu.com/s'
         self.search_key = 'wd'
 
     def _findMatchTags(self, soup):
@@ -37,3 +37,15 @@ class BaiduEngine(EngineBase):
         r_url = req.getheader('Location')
         conn.close()
         return r_url
+
+    def _findNextPage(self, soup):
+        page = -1
+        url = ''
+        nav = soup.find('div', id='page')
+        if nav:
+            cur = nav.find('strong')
+            if cur and cur.next_sibling and not cur.next_sibling.get('class'):
+                a = cur.next_sibling
+                page = int(a.text)
+                url = parse.urljoin(self.url, a.get('href'))
+        return (page, url)

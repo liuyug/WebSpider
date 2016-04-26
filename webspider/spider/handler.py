@@ -16,14 +16,23 @@ class HandlerBase(object):
     dead_queue
         dead url, don't get url content
     """
-    def __init__(self, agent=None, proxy=None, retries=None):
+    seed_queue = None
+    done_queue = None
+    dead_queue = None
+    is_shutdown = False
+    retry = 1
+    agent = None
+    proxy = None
+    cookie = None
+
+    def __init__(self, agent=None, proxy=None, cookie=None, retry=None):
         self.seed_queue = SeedQueue()
         self.done_queue = DoneQueue()
         self.dead_queue = DeadQueue()
-        self.is_shutdown = False
-        self.retries = retries or 3
+        self.retry = retry or 1
         self.agent = agent
         self.proxy = proxy
+        self.cookie = cookie
 
     def handle(self, data, url):
         pass
@@ -34,16 +43,14 @@ class HandlerBase(object):
         get_url = '%s?%s' % (url, data) if data else url
         if get_url in self.done_queue or get_url in self.dead_queue:
             return
-        ret = url_downloader(url, data=data,
+        ret = url_downloader(url, data=data, cookie=self.cookie,
                              retry=2,
                              agent=self.agent, proxy=self.proxy)
         if ret['error'] == 'Ok':
             self.handle(ret['data'], url)
             self.done_queue.put(get_url)
-        elif item['count'] > self.retries:
-            perror('Failed to get %s: %s' % (url, ret['error']))
-            self.dead_queue.put(get_url)
-        else:
+            self.cookie = ret['cookie']
+        elif item['count'] < self.retry:
             new_item = {
                 'url': url,
                 'data': item['data'],
@@ -51,12 +58,15 @@ class HandlerBase(object):
                 'error': ret['error'],
             }
             self.seed_queue.put(new_item)
+        else:
+            perror('Failed to get %s: %s' % (url, ret['error']))
+            self.dead_queue.put(get_url)
 
     def put(self, url, data=None):
         item = {
             'url': url,
             'data': data,
-            'count': 0,
+            'count': 1,
             'error': None,
         }
         self.seed_queue.put(item)

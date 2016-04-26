@@ -1,15 +1,16 @@
 #
 # bing: https://msdn.microsoft.com/en-us/library/ff795620.aspx
 
+from six.moves.urllib.parse import urljoin
 from .base import EngineBase
 
 
 class BingEngine(EngineBase):
     def __init__(self, **kwargs):
-        super(BingEngine, self).__init__(**kwargs)
         self.name = 'bing'
-        self.url = 'http://www.bing.com/search'
-        self.page_key = 'first'
+        self.firstPage = 'https://www.bing.com/'
+        super(BingEngine, self).__init__(**kwargs)
+        self.url = 'https://www.bing.com/search'
         self.search_key = 'q'
 
     def _format_kv(self, k, v):
@@ -32,3 +33,16 @@ class BingEngine(EngineBase):
         h2 = tag.find('h2')
         a = h2.find('a')
         return a.attrs.get('href', '')
+
+    def _findNextPage(self, soup):
+        page = -1
+        url = ''
+        cur_a = soup.find('a', class_='sb_pagS')
+        if cur_a:
+            cur = cur_a.parent
+            if cur and cur.next_sibling:
+                a = cur.next_sibling.find('a')
+                if not a.get('class'):
+                    page = int(a.text)
+                    url = urljoin(self.url, a.get('href'))
+        return (page, url)

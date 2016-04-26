@@ -17,7 +17,7 @@ encoding = sys.stdout.encoding or 'UTF-8'
 
 
 def handleSoup(soup, url):
-    print('# request: %s' % url)
+    print('# page: %s' % url)
 
 
 def handleData(data):
@@ -46,7 +46,7 @@ def main():
         help='search engine',
     )
     search_group.add_argument('--user-agent', help='http user agent')
-    search_group.add_argument('--page-num', type=int, default=10, help='searching page number')
+    search_group.add_argument('--page-max', type=int, default=10, help='searching max pages')
     search_group.add_argument('--proxy', help='proxy server, socks5://127.0.0.1:1080')
 
     parser.add_argument('content', nargs='+', help='searching content')
@@ -67,7 +67,7 @@ def main():
                 data['text'].append(content)
         engine.addSearch(**data)
 
-        engine.addSearch(page_max=args.page_num)
+        engine.addSearch(page_max=args.page_max)
         engine.registerCallback(handleData=handleData, handleSoup=handleSoup)
         global only_url
         only_url = args.only_url
