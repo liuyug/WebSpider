@@ -13,14 +13,13 @@ class BingEngine(EngineBase):
         self.url = 'https://www.bing.com/search'
         self.search_key = 'q'
 
-    def _format_kv(self, k, v):
-        if k == 'inurl':
-            if v[0] == '-':
-                return '-instreamset:(url):"%s"' % v[1:]
-            else:
-                return 'instreamset:(url):"%s"' % v
-        else:
-            return super(BingEngine, self)._format_kv(k, v)
+    def _prefix_word(self, word):
+        word = super(BingEngine, self)._prefix_word(word)
+        k, _, v = word.partition(':')
+        if v and 'inurl' in k:
+            kk = k.replace('inurl', 'instreamset:(url)')
+            word = '%s:%s' % (kk, v)
+        return word
 
     def _findMatchTags(self, soup):
         return soup.find_all('li', class_='b_algo')

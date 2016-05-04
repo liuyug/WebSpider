@@ -20,7 +20,7 @@ class EngineBase(object):
     firstPage = None
     url = None
     search_key = None
-    page_max = None
+    record_max = 10
     search = None
     callbacks = {
         'handleTag': None,
@@ -34,7 +34,7 @@ class EngineBase(object):
     def __init__(self, **kwargs):
         kwargs['cookie'] = self.__getCookie()
         self.spider = EngineSpider(self, **kwargs)
-        self.search = {}
+        self.search = []
         self.matchs = []
         self.data = {}
 
@@ -48,18 +48,16 @@ class EngineBase(object):
                 return ret['cookie']
         return None
 
-    def _format_kv(self, k, v):
-        if k == 'text':
-            return ' '.join(v)
-        elif v[0] == '-':
-            return '-%s:%s' % (k, v[1:])
-        else:
-            return '%s:%s' % (k, v)
+    def _prefix_word(self, word):
+        k, _, v = word.partition(':')
+        if v and v[0] == '-':
+            word = '-%s:%s' % (k, v[1:])
+        return word
 
     def getEncodeData(self):
         text = []
-        for k, v in self.search.items():
-            text.append(self._format_kv(k, v))
+        for word in self.search:
+            text.append(self._prefix_word(word))
         data = self.data.copy()
         data[self.search_key] = ' '.join(text)
         return urlencode(data)
@@ -82,14 +80,12 @@ class EngineBase(object):
 
     def addSearch(self, **kwargs):
         for k, v in kwargs.items():
-            if k == 'page_max':
-                self.page_max = v
+            if k == 'record_max':
+                self.record_max = v
             elif k == 'text':
-                if 'text' not in self.search:
-                    self.search['text'] = []
-                self.search['text'].extend(v)
+                self.search.extend(v)
             else:
-                self.search[k] = v
+                raise ValueError('Invalid keyword %s:%s' % (k, v))
 
     def _findMatchTags(self, soup):
         return []
@@ -129,8 +125,10 @@ class EngineBase(object):
             if self.callbacks['handleData']:
                 self.callbacks['handleData'](data)
             self.matchs.append(data)
-        page, next_url = self._findNextPage(soup)
-        if next_url and (not self.page_max or page < (self.page_max + 1)):
+            if self.count >= self.record_max:
+                return
+        _, next_url = self._findNextPage(soup)
+        if next_url:
             self.spider.put(next_url)
 
     def getMatchs(self):
