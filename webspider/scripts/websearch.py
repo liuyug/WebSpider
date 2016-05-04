@@ -30,7 +30,11 @@ def handleData(data):
 
 
 def main():
-    epilog = """Example:
+    epilog = """
+Note:
+    Transformed Syntax: "-inurl:www" => "inurl:-www"
+
+Example:
     %(prog)s --engine baidu <search text>
     %(prog)s --engine baidu site:baidu.com filetype:pdf
 """
