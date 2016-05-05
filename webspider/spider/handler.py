@@ -58,6 +58,7 @@ class HandlerBase(object):
                 'error': ret['error'],
             }
             self.seed_queue.put(new_item)
+            perror('Error %s: %s... retry' % (url, ret['error']))
         else:
             perror('Failed to get %s: %s' % (url, ret['error']))
             self.dead_queue.put(get_url)
