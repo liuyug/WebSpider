@@ -73,17 +73,20 @@ def url_downloader(url, data=None, path=None, cookie=None,
                     'Content-Type',
                     'application/x-www-form-urlencoded;charset=utf-8')
             response = None
-            if cookie is None:
-                cookie = CookieJar()
-            cookie_handler = HTTPCookieProcessor(cookie)
-            opener = build_opener(cookie_handler)
+            handlers = []
             if proxy:
                 scheme, host, port = proxy.split(':')
                 host = host.strip('/')
                 proxy_handler = SocksiPyHandler(
                     socks.PROXY_TYPES[scheme.upper()], host, int(port)
                 )
-                opener.add_handler(proxy_handler)
+                handlers.append(proxy_handler)
+            if cookie is None:
+                cookie = CookieJar()
+            cookie_handler = HTTPCookieProcessor(cookie)
+            handlers.append(cookie_handler)
+
+            opener = build_opener(*handlers)
             response = opener.open(request, timeout=timeout)
             content_encoding = response.info().get('content-encoding')
             if content_encoding:
