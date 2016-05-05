@@ -49,9 +49,6 @@ class EngineBase(object):
         return None
 
     def _prefix_word(self, word):
-        k, _, v = word.partition(':')
-        if v and v[0] == '-':
-            word = '-%s:%s' % (k, v[1:])
         return word
 
     def getEncodeData(self):

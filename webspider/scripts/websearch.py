@@ -7,13 +7,17 @@
 #   BeautifulSoup4
 
 import sys
+import codecs
 import argparse
+
+import six
 
 from webspider.searchengine import getEngine
 
 
-version = '0.1.3'
-encoding = sys.stdout.encoding or 'UTF-8'
+version = '0.1.4'
+if six.PY2 and not sys.stdout.encoding:
+    sys.stdout = codecs.getwriter('utf-8')(sys.stdout)
 
 
 def handleSoup(soup, url):
@@ -26,17 +30,18 @@ def handleData(data):
         print('%(url)s' % data)
     else:
         text = '# %(index)s.\t%(title)s\n%(url)s' % data
-        print(text.encode(encoding))
+        print(text)
 
 
 def main():
     epilog = """
 Note:
-    Because "-" is prefix character for command line parameter please put NOT(-) at behind of ":", such as "-inurl:www" => "inurl:-www".
+    "-" is prefix character for command line parameter please put "--" in front of "-", such as "-- -inurl:www".
 
 Example:
     %(prog)s --engine baidu <search text>
     %(prog)s --engine baidu site:baidu.com filetype:pdf
+    %(prog)s --engine baidu site:baidu.com -- -inurl:www
 """
     parser = argparse.ArgumentParser(
         formatter_class=argparse.RawDescriptionHelpFormatter,
