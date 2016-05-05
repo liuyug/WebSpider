@@ -12,7 +12,7 @@ import argparse
 from webspider.searchengine import getEngine
 
 
-version = '0.1.2'
+version = '0.1.3'
 encoding = sys.stdout.encoding or 'UTF-8'
 
 
@@ -32,7 +32,7 @@ def handleData(data):
 def main():
     epilog = """
 Note:
-    Transformed Syntax: "-inurl:www" => "inurl:-www"
+    Because "-" is prefix character for command line parameter please put NOT(-) at behind of ":", such as "-inurl:www" => "inurl:-www".
 
 Example:
     %(prog)s --engine baidu <search text>
