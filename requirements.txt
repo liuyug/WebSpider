@@ -1,2 +1,3 @@
 six
 BeautifulSoup4
+lxml
