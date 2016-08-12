@@ -34,9 +34,7 @@ class EngineBase(object):
     def __init__(self, **kwargs):
         kwargs['cookie'] = self.__getCookie()
         self.spider = EngineSpider(self, **kwargs)
-        self.search = []
-        self.matchs = []
-        self.data = {}
+        self.clear()
 
     def __str__(self):
         return self.name
@@ -50,6 +48,12 @@ class EngineBase(object):
 
     def _prefix_word(self, word):
         return word
+
+    def clear(self):
+        self.spider.cleanup()
+        self.search = []
+        self.matchs = []
+        self.data = {}
 
     def getEncodeData(self):
         text = []
