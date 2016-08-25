@@ -6,6 +6,7 @@ import socket
 import random
 
 from six.moves.urllib.error import URLError
+from six.moves.urllib.parse import urlencode
 from six.moves.urllib.request import Request, build_opener, HTTPCookieProcessor
 from six.moves.http_cookiejar import CookieJar
 
@@ -66,6 +67,8 @@ def url_downloader(url, data=None, path=None, cookie=None,
     """
     while True:
         try:
+            if isinstance(data, dict):
+                data = urlencode(data)
             request = Request(url, data=data)
             request.add_header('User-Agent', agent or get_user_agent())
             if data:
